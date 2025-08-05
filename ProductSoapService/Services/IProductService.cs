@@ -11,6 +11,9 @@ public interface IProductService
     ProductDto GetProductById(int id);
 
     [OperationContract]
+    List<ProductDto> GetProductsByFilter(ProductQueryFilterDTO filter);
+
+    [OperationContract]
     void AddProduct(ProductDto product);
 
     [OperationContract]
