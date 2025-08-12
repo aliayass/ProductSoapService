@@ -1,48 +1,49 @@
 # 🛍️ ProductSoapService
 
-Modern .NET 8 ve CoreWCF kullanarak geliştirilmiş, PostgreSQL veritabanı ile entegre edilmiş SOAP web servisi projesi.
+Modern .NET 8 ve CoreWCF kullanarak geliştirilmiş, PostgreSQL veritabanı ile entegre edilmiş SOAP web servisi projesi. Çözüm, API ve Test projelerini birlikte içerir ve Hangfire ile zamanlanmış JSON dışa aktarma (export) job’ı çalıştırır.
 
-## 📋 Proje Özeti
-
-Bu proje, ürün yönetimi için CRUD (Create, Read, Update, Delete) operasyonları sunan bir SOAP web servisi oluşturur. REST API yerine geleneksel SOAP protokolü kullanarak, enterprise uygulamalar için uygun bir çözüm sunar.
-
-## 🏗️ Mimari Yapı
+## 📚 Çözüm Yapısı
 
 ```
-ProductSoapService/
-├── Models/          # Entity modelleri
-├── DTOs/           # Data Transfer Objects  
-├── Services/       # Business logic katmanı
-├── Data/           # Database context
-├── Mapping/        # AutoMapper profilleri
-└── Migrations/     # Database migrations
+ProductSoapService.sln
+├─ ProductSoapService/                 # API (CoreWCF SOAP)
+│  ├─ Data/                            # EF Core DbContext
+│  ├─ Dtos/                            # Data Transfer Objects
+│  ├─ Jobs/                            # Hangfire job ve zamanlayıcı
+│  ├─ Json/                            # Ürünlerin JSON çıktıları (job kaydeder)
+│  ├─ Mapping/                         # AutoMapper profilleri
+│  ├─ Migrations/                      # EF Core migration'lar
+│  ├─ Models/                          # Entity modelleri
+│  ├─ Services/                        # İş mantığı (Service katmanı)
+│  ├─ ProductSoapService.API.csproj    # API proje dosyası
+│  └─ README.md                        # API odaklı detaylı dokümantasyon
+└─ ProductSoapService.Test/            # xUnit test projesi
+   ├─ ProductSoapService.Test.csproj
+   ├─ ProductServiceTest.cs
+   └─ README.md                        # Testleri çalıştırma ve coverage rehberi
 ```
 
 ## 🛠️ Teknoloji Stack
 
-- **.NET 8** - Modern framework
-- **CoreWCF** - SOAP web servisleri
-- **PostgreSQL** - Veritabanı
-- **Entity Framework Core** - ORM
-- **AutoMapper** - Object mapping
-- **Layered Architecture** - Temiz kod yapısı
+- **.NET 8** (C#)
+- **CoreWCF** (SOAP servisleri)
+- **PostgreSQL** + **Entity Framework Core** (ORM)
+- **AutoMapper** (mapping)
+- **Hangfire** (background jobs, cron planlama)
+- **xUnit** + **FluentAssertions** (test)
 
 ## 🚀 Kurulum
 
-### Gereksinimler
-- .NET 8 SDK
-- PostgreSQL
-- Visual Studio 2022 veya VS Code
-
-### Adım 1: Projeyi Klonlayın
+### 1) Depoyu Klonla
 ```bash
+# Doğru depo URL'si
+# Açıklama: Çözümü yerel makinenize indirir
 git clone https://github.com/aliayass/ProductSoapService.git
 cd ProductSoapService
 ```
 
-### Adım 2: Veritabanı Bağlantısını Yapılandırın
-`appsettings.json` dosyasında PostgreSQL connection string'ini güncelleyin:
-
+### 2) Veritabanı Bağlantısı
+`ProductSoapService/appsettings.json` içinde PostgreSQL bağlantı bilgisini güncelleyin:
 ```json
 {
   "ConnectionStrings": {
@@ -51,105 +52,115 @@ cd ProductSoapService
 }
 ```
 
-### Adım 3: Migration'ları Çalıştırın
+### 3) Migration ve Veritabanı
 ```bash
-dotnet ef database update
+# Açıklama: Migration'ları veritabanına uygular
+dotnet ef database update --project ProductSoapService/ProductSoapService.API.csproj
 ```
 
-### Adım 4: Uygulamayı Başlatın
+> Not: `dotnet-ef` yüklü değilse `dotnet tool install -g dotnet-ef` komutunu çalıştırın ve oturumu yeniden açın.
+
+### 4) Uygulamayı Çalıştır
 ```bash
+# API klasörüne geç ve çalıştır
+cd ProductSoapService
+# Açıklama: Local ortamda CoreWCF servislerini ayağa kaldırır
 dotnet run
 ```
 
-## 📡 API Endpoints
+## 📡 SOAP Servis Bilgileri
 
-### Base URL
+- **Base URL**
 ```
 http://localhost:5192/ProductService.svc
 ```
-
-### WSDL Dokümantasyonu
+- **WSDL**
 ```
 http://localhost:5192/ProductService.svc?wsdl
 ```
 
-## 🧪 Test Etme
+### Postman Örnekleri
 
-### SOAP UI ile Test
+- GetAllProducts
+```http
+POST http://localhost:5192/ProductService.svc
+Content-Type: text/xml; charset=utf-8
+SOAPAction: "http://localhost:7015/ProductService/IProductService/GetAllProducts"
 
-1. **SOAP UI'ı açın**
-2. **File → New SOAP Project**
-3. **Initial WSDL:** `http://localhost:5192/ProductService.svc?wsdl`
-4. **Project Name:** `ProductSoapService`
-5. **OK** butonuna tıklayın
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:prod="http://localhost:7015/ProductService">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <prod:GetAllProducts/>
+  </soapenv:Body>
+</soapenv:Envelope>
+```
 
-### Postman ile Test
+- AddProduct
+```http
+POST http://localhost:5192/ProductService.svc
+Content-Type: text/xml; charset=utf-8
+SOAPAction: "http://localhost:7015/ProductService/IProductService/AddProduct"
 
-#### GetAllProducts
-- **Method:** POST
-- **URL:** `http://localhost:5192/ProductService.svc`
-- **Headers:**
-  ```
-  Content-Type: text/xml; charset=utf-8
-  SOAPAction: "http://localhost:7015/ProductService/IProductService/GetAllProducts"
-  ```
-- **Body:**
-  ```xml
-  <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:prod="http://localhost:7015/ProductService">
-     <soapenv:Header/>
-     <soapenv:Body>
-        <prod:GetAllProducts/>
-     </soapenv:Body>
-  </soapenv:Envelope>
-  ```
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:prod="http://localhost:7015/ProductService">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <prod:AddProduct>
+      <prod:product>
+        <prod:id>0</prod:id>
+        <prod:itemId>PROD001</prod:itemId>
+        <prod:beden>M</prod:beden>
+        <prod:barkod>123456789</prod:barkod>
+        <prod:renk>Kırmızı</prod:renk>
+        <prod:price>99.99</prod:price>
+      </prod:product>
+    </prod:AddProduct>
+  </soapenv:Body>
+</soapenv:Envelope>
+```
 
-#### AddProduct
-- **Method:** POST
-- **URL:** `http://localhost:5192/ProductService.svc`
-- **Headers:**
-  ```
-  Content-Type: text/xml; charset=utf-8
-  SOAPAction: "http://localhost:7015/ProductService/IProductService/AddProduct"
-  ```
-- **Body:**
-  ```xml
-  <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:prod="http://localhost:7015/ProductService">
-     <soapenv:Header/>
-     <soapenv:Body>
-        <prod:AddProduct>
-           <prod:product>
-              <prod:id>0</prod:id>
-              <prod:itemId>PROD001</prod:itemId>
-              <prod:beden>M</prod:beden>
-              <prod:barkod>123456789</prod:barkod>
-              <prod:renk>Kırmızı</prod:renk>
-              <prod:price>99.99</prod:price>
-           </prod:product>
-        </prod:AddProduct>
-     </soapenv:Body>
-  </soapenv:Envelope>
-  ```
+## ⏱️ Background Job (JSON Export)
 
-## 📊 Veritabanı Şeması
+- `Jobs/JobScheduler.cs`: Hangfire ile "*/2 * * * *" cron ifadesiyle her 2 dakikada bir `ProductJsonJob` tetiklenir.
+- `Jobs/ProductJsonJob.cs`: SOAP `GetAllProducts` çağrısını yapar ve sonucu JSON olarak diske kaydeder.
+- Varsayılan JSON klasörü şu anda makineye özel bir yola ayarlı:
+  - `C:\Users\ali.ayas\Desktop\SOAP ve REST\ProductSoapService\ProductSoapService\Json`
+  - Bu yolu ihtiyacınıza göre `ProductJsonJob.cs` içindeki `JsonFolderPath` alanından güncelleyebilirsiniz.
+- Kullanılan SOAPAction: `http://localhost:7015/ProductService/IProductService/GetAllProducts`
 
-### Products Tablosu
-| Alan | Tip | Açıklama |
-|------|-----|----------|
-| Id | INT | Primary Key, Auto Increment |
-| ItemId | VARCHAR(100) | Ürün kodu |
-| Beden | VARCHAR(50) | Ürün bedeni |
-| Barkod | VARCHAR(50) | Barkod numarası |
-| Renk | VARCHAR(50) | Ürün rengi |
-| Price | DECIMAL | Ürün fiyatı |
+> Not: Hangfire konfigürasyonunuz `Program.cs` içinde yapılıdır. UI kullanıyorsanız dashboard adresinizi eklemeyi unutmayın.
 
-## 🔧 Konfigürasyon
+## 🧪 Testler
 
-### Program.cs
+Test projesi `ProductSoapService.Test/` altında yer alır.
+
+```bash
+# Çözüm kökünden tüm testleri çalıştırın
+dotnet test -c Release
+
+# Sadece test projesi
+dotnet test ProductSoapService.Test/ProductSoapService.Test.csproj -c Release
+```
+
+Detaylı kullanım ve coverage için `ProductSoapService.Test/README.md` dosyasına bakın.
+
+## 📊 Veritabanı Şeması (Products)
+
+| Alan   | Tip          | Açıklama                    |
+| ------ | ------------ | --------------------------- |
+| Id     | INT          | Primary Key, Auto Increment |
+| ItemId | VARCHAR(100) | Ürün kodu                   |
+| Beden  | VARCHAR(50)  | Ürün bedeni                 |
+| Barkod | VARCHAR(50)  | Barkod numarası             |
+| Renk   | VARCHAR(50)  | Ürün rengi                  |
+| Price  | DECIMAL      | Ürün fiyatı                 |
+
+## 🔧 Koddan Önemli Parçalar
+
+- `Program.cs` (özet):
 ```csharp
-// CoreWCF Konfigürasyonu
+// CoreWCF servisleri
 builder.Services.AddServiceModelServices();
 builder.Services.AddServiceModelMetadata();
-builder.Services.AddSingleton<IServiceBehavior, UseRequestHeadersForMetadataAddressBehavior>();
 
 // PostgreSQL
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -159,65 +170,49 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 ```
 
-### IProductService.cs
+- `IProductService` (özet):
 ```csharp
 [ServiceContract(Namespace = "http://localhost:7015/ProductService")]
 public interface IProductService
 {
-    [OperationContract]
-    List<ProductDto> GetAllProducts();
-
-    [OperationContract]
-    ProductDto GetProductById(int id);
-
-    [OperationContract]
-    void AddProduct(ProductDto product);
-
-    [OperationContract]
-    void UpdateProduct(ProductDto product);
-
-    [OperationContract]
-    void DeleteProduct(int id);
+    [OperationContract] List<ProductDto> GetAllProducts();
+    [OperationContract] ProductDto GetProductById(int id);
+    [OperationContract] void AddProduct(ProductDto product);
+    [OperationContract] void UpdateProduct(ProductDto product);
+    [OperationContract] void DeleteProduct(int id);
 }
 ```
 
-## 🎯 Özellikler
-
-- ✅ **SOAP API** - REST yerine SOAP protokolü
-- ✅ **CRUD İşlemleri** - Tam ürün yönetimi
-- ✅ **PostgreSQL** - Modern veritabanı
-- ✅ **Layered Architecture** - Temiz kod yapısı
-- ✅ **AutoMapper** - Otomatik mapping
-- ✅ **WSDL Desteği** - Otomatik dokümantasyon
-- ✅ **Entity Framework Core** - Modern ORM
-- ✅ **.NET 8** - En güncel framework
-
 ## 🚨 Sorun Giderme
 
-### SSL Sertifikası Sorunu
+- SSL Sertifikası:
 ```bash
 dotnet dev-certs https --trust
 ```
-
-### Migration Sorunu
+- Migration sorunları:
 ```bash
-dotnet ef migrations add InitialCreate
-dotnet ef database update
+dotnet ef migrations add InitialCreate --project ProductSoapService/ProductSoapService.API.csproj
+dotnet ef database update --project ProductSoapService/ProductSoapService.API.csproj
 ```
+- Port çakışması: `Properties/launchSettings.json` dosyasındaki portları güncelleyin.
+- JSON klasör izni/yolu: `ProductJsonJob.cs` içindeki `JsonFolderPath`’i var olan ve yazılabilir bir klasör olarak güncelleyin.
 
-### Port Sorunu
-`Properties/launchSettings.json` dosyasında port ayarlarını kontrol edin.
+## 🧭 İlgili Dokümanlar
 
+- API detayları: `ProductSoapService/README.md`
+- Test rehberi: `ProductSoapService.Test/README.md`
 
 ## 👥 Katkıda Bulunma
 
 1. Fork edin
 2. Feature branch oluşturun (`git checkout -b feature/AmazingFeature`)
-3. Commit edin (`git commit -m 'Add some AmazingFeature'`)
+3. Commit edin (`git commit -m "Add some AmazingFeature"`)
 4. Push edin (`git push origin feature/AmazingFeature`)
-5. Pull Request oluşturun
+5. Pull Request açın
 
+## 📎 Bağlantılar
 
+- GitHub depo: https://github.com/aliayass/ProductSoapService
 
 ---
 
