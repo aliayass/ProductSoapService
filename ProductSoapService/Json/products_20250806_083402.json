@@ -1,0 +1,30 @@
+﻿{
+  "GetAllProductsResult": {
+    "ProductDto": [
+      {
+        "barkod": "123456789",
+        "beden": "M",
+        "id": "1",
+        "itemId": "PROD001",
+        "price": "99.99",
+        "renk": "Mavi"
+      },
+      {
+        "barkod": "9988776655",
+        "beden": "XL",
+        "id": "2",
+        "itemId": "ASD123asd",
+        "price": "12.34",
+        "renk": "Kırmızı"
+      },
+      {
+        "barkod": "19283756",
+        "beden": "M",
+        "id": "4",
+        "itemId": "PROD004",
+        "price": "44.44",
+        "renk": "Yeşil"
+      }
+    ]
+  }
+}

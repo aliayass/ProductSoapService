@@ -14,7 +14,7 @@ namespace ProductSoapService.Jobs
         public void Schedule()
         {
             _jobManager.AddOrUpdate<ProductJsonJob>(
-                "save-products-json",
+                "save-products-json",//job id
                 job => job.ExecuteAsync(),
                 "*/2 * * * *"
             );

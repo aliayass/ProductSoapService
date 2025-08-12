@@ -89,11 +89,7 @@ namespace ProductSoapService.Jobs
             }
         }
 
-        /// <summary>
-        /// XML string'ini JSON formatına dönüştürür
-        /// </summary>
-        /// <param name="xmlString">Dönüştürülecek XML string'i</param>
-        /// <returns>JSON formatında string</returns>
+       
         private string ConvertXmlToJson(string xmlString)
         {
             try
@@ -107,11 +103,13 @@ namespace ProductSoapService.Jobs
                     .FirstOrDefault(x => x.Name.LocalName == "GetAllProductsResponse")? //XML'deki GetAllProductResponse elementine erişip ==>>
                     .Descendants()// XML'deki tüm elementleri (recursive olarak) listeler.
                     .FirstOrDefault(x => x.Name.LocalName == "GetAllProductsResult"); // onunda içinden GetAllResponse elementini body'e kopyalıyor.
-
                 if (body != null)
                 {
-                    // Bulunan veriyi JSON'a dönüştür
-                    return JsonConvert.SerializeXNode(body, Newtonsoft.Json.Formatting.Indented); //JsonConvert.SerializeXNode(...) Newtonsoft.Json kütüphanesinden gelir.  XML verisini alır ve onu JSON string haline getirir.
+                    // Namespace’leri temizle
+                    var cleaned = RemoveAllNamespaces(body);
+
+                    // JSON'a çevir
+                    return JsonConvert.SerializeXNode(cleaned, Newtonsoft.Json.Formatting.Indented);
                 } //Formatting.Indented ==>> JSON çıktısının güzel, okunabilir şekilde (girintili) oluşturulmasını sağlar. Her satır ayrı yazılır, girintiler olur.
 
                 // Eğer beklenen yapı bulunamazsa tüm XML'i JSON'a çevir
@@ -130,5 +128,17 @@ namespace ProductSoapService.Jobs
                 }, Newtonsoft.Json.Formatting.Indented);
             }
         }
+
+        // XML içindeki namespace'leri kaldır.
+        private XElement RemoveAllNamespaces(XElement xmlElement)
+        {
+            return new XElement(
+                xmlElement.Name.LocalName,
+                xmlElement.HasElements
+                    ? xmlElement.Elements().Select(RemoveAllNamespaces)
+                    : (object?)xmlElement.Value
+            );
+        }
+
     }
 }
